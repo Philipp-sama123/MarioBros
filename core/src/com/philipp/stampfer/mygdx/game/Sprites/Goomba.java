@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.EdgeShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.utils.Array;
 import com.philipp.stampfer.mygdx.game.MarioBros;
 import com.philipp.stampfer.mygdx.game.Screens.PlayScreen;
@@ -15,6 +16,8 @@ public class Goomba extends Enemy {
     private float stateTime;
     private Animation walkAnimation;
     private Array<TextureRegion> frames;
+    private boolean goombaGetsDestroyed;
+    private boolean isGoombaDestroyed;
 
     public Goomba(PlayScreen screen, float x, float y) {
         super(screen, x, y);
@@ -25,14 +28,15 @@ public class Goomba extends Enemy {
         walkAnimation = new Animation(0.4f, frames);
         stateTime = 0;
         setBounds(getX(), getY(), 16 / MarioBros.PIXELS_PER_METER, 16 / MarioBros.PIXELS_PER_METER);
+        goombaGetsDestroyed = false;
+        isGoombaDestroyed = false;
     }
 
     @Override
     protected void defineEnemy() {
         BodyDef bodyDef = new BodyDef();
-        bodyDef.position.set(
-                32 / MarioBros.PIXELS_PER_METER,
-                32 / MarioBros.PIXELS_PER_METER);
+
+        bodyDef.position.set(getX(), getY());
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         body2d = world.createBody(bodyDef);
 
@@ -51,17 +55,36 @@ public class Goomba extends Enemy {
         fixtureDef.shape = circleShape;
         body2d.createFixture(fixtureDef);
 
-        EdgeShape feet = new EdgeShape();
-        feet.set(
-                new Vector2(-2 / MarioBros.PIXELS_PER_METER, -8 / MarioBros.PIXELS_PER_METER),
-                new Vector2(2 / MarioBros.PIXELS_PER_METER, -8 / MarioBros.PIXELS_PER_METER)
-        );
-        body2d.createFixture(fixtureDef);
+        //Create the Head
+        PolygonShape head = new PolygonShape();
+        Vector2[] vertice = new Vector2[4];
+        vertice[0] = new Vector2(-5, 8).scl(1 / MarioBros.PIXELS_PER_METER);
+        vertice[1] = new Vector2(5, 8).scl(1 / MarioBros.PIXELS_PER_METER);
+        vertice[2] = new Vector2(-3, 3).scl(1 / MarioBros.PIXELS_PER_METER);
+        vertice[3] = new Vector2(3, 3).scl(1 / MarioBros.PIXELS_PER_METER);
+        head.set(vertice);
+
+        fixtureDef.shape = head;
+        fixtureDef.restitution = 0.5f;
+
+        fixtureDef.filter.categoryBits = MarioBros.ENEMY_HEAD_BIT;
+        body2d.createFixture(fixtureDef).setUserData(this);
+    }
+
+    @Override
+    public void hitOnHead() {
+        goombaGetsDestroyed = true;
     }
 
     public void update(float deltaTime) {
         stateTime += deltaTime;
-        setPosition(body2d.getPosition().x - getWidth() / 2, body2d.getPosition().y - getHeight() / 2);
-        setRegion((TextureRegion) walkAnimation.getKeyFrame(stateTime, true));
+        if (goombaGetsDestroyed && !isGoombaDestroyed) {
+            world.destroyBody(body2d);
+            isGoombaDestroyed = true;
+            setRegion(new TextureRegion(screen.getTextureAtlas().findRegion("goomba"), 32, 0, 16, 16));
+        } else if (!isGoombaDestroyed) {
+            setPosition(body2d.getPosition().x - getWidth() / 2, body2d.getPosition().y - getHeight() / 2);
+            setRegion((TextureRegion) walkAnimation.getKeyFrame(stateTime, true));
+        }
     }
 }

@@ -127,7 +127,9 @@ public class Mario extends Sprite {
         fixtureDef.filter.maskBits = MarioBros.GROUND_BIT |
                 MarioBros.COIN_BIT |
                 MarioBros.BRICK_BIT |
-                MarioBros.ENEMY_BIT | MarioBros.OBJECT_BIT;
+                MarioBros.ENEMY_BIT |
+                MarioBros.OBJECT_BIT |
+                MarioBros.ENEMY_HEAD_BIT;
 
         fixtureDef.shape = circleShape;
         body2d.createFixture(fixtureDef);
