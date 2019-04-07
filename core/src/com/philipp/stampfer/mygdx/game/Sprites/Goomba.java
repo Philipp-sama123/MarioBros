@@ -1,6 +1,7 @@
 package com.philipp.stampfer.mygdx.game.Sprites;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -32,6 +33,21 @@ public class Goomba extends Enemy {
         isGoombaDestroyed = false;
     }
 
+    public void update(float deltaTime) {
+        stateTime += deltaTime;
+        if (goombaGetsDestroyed && !isGoombaDestroyed) {
+            world.destroyBody(body2d);
+            isGoombaDestroyed = true;
+            setRegion(new TextureRegion(screen.getTextureAtlas().findRegion("goomba"), 32, 0, 16, 16));
+            stateTime = 0;
+        } else if (!isGoombaDestroyed) {
+            body2d.setLinearVelocity(velocity);
+
+            setPosition(body2d.getPosition().x - getWidth() / 2 , body2d.getPosition().y - getHeight() / 2);
+            setRegion((TextureRegion) walkAnimation.getKeyFrame(stateTime, true));
+        }
+    }
+
     @Override
     protected void defineEnemy() {
         BodyDef bodyDef = new BodyDef();
@@ -53,7 +69,7 @@ public class Goomba extends Enemy {
                 MarioBros.MARIO_BIT;
 
         fixtureDef.shape = circleShape;
-        body2d.createFixture(fixtureDef);
+        body2d.createFixture(fixtureDef).setUserData(this);
 
         //Create the Head
         PolygonShape head = new PolygonShape();
@@ -76,15 +92,10 @@ public class Goomba extends Enemy {
         goombaGetsDestroyed = true;
     }
 
-    public void update(float deltaTime) {
-        stateTime += deltaTime;
-        if (goombaGetsDestroyed && !isGoombaDestroyed) {
-            world.destroyBody(body2d);
-            isGoombaDestroyed = true;
-            setRegion(new TextureRegion(screen.getTextureAtlas().findRegion("goomba"), 32, 0, 16, 16));
-        } else if (!isGoombaDestroyed) {
-            setPosition(body2d.getPosition().x - getWidth() / 2, body2d.getPosition().y - getHeight() / 2);
-            setRegion((TextureRegion) walkAnimation.getKeyFrame(stateTime, true));
+    public void draw(Batch batch) {
+        // goomba gets destroyed after 1 s
+        if (!isGoombaDestroyed || stateTime < 1) {
+            super.draw(batch);
         }
     }
 }

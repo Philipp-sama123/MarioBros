@@ -8,6 +8,7 @@ import com.badlogic.gdx.physics.box2d.Manifold;
 import com.philipp.stampfer.mygdx.game.MarioBros;
 import com.philipp.stampfer.mygdx.game.Sprites.Enemy;
 import com.philipp.stampfer.mygdx.game.Sprites.InteractiveTileObject;
+import com.philipp.stampfer.mygdx.game.Sprites.Mario;
 
 public class WorldContactListener implements ContactListener {
 
@@ -33,8 +34,17 @@ public class WorldContactListener implements ContactListener {
             case MarioBros.ENEMY_HEAD_BIT | MarioBros.MARIO_BIT:
                 if (fixtureA.getFilterData().categoryBits == MarioBros.ENEMY_HEAD_BIT)
                     ((Enemy) fixtureA.getUserData()).hitOnHead();
-                else if (fixtureA.getFilterData().categoryBits == MarioBros.ENEMY_HEAD_BIT)
+                else
                     ((Enemy) fixtureB.getUserData()).hitOnHead();
+                break;
+            case MarioBros.ENEMY_BIT | MarioBros.OBJECT_BIT:
+                if (fixtureA.getFilterData().categoryBits == MarioBros.ENEMY_BIT)
+                    ((Enemy) fixtureA.getUserData()).reverseVelocity(true, false);
+                else
+                    ((Enemy) fixtureB.getUserData()).reverseVelocity(true, false);
+                break;
+
+
         }
     }
 
