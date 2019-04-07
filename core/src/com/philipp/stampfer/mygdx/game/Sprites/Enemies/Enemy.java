@@ -1,4 +1,4 @@
-package com.philipp.stampfer.mygdx.game.Sprites;
+package com.philipp.stampfer.mygdx.game.Sprites.Enemies;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Vector2;
@@ -20,11 +20,14 @@ public abstract class Enemy extends Sprite {
         setPosition(x, y);
         defineEnemy();
         velocity = new Vector2(1, 0);
+        body2d.setActive(false);
     }
 
     protected abstract void defineEnemy();
 
     public abstract void hitOnHead();
+
+    public abstract void update(float deltaTime);
 
     public void reverseVelocity(boolean x, boolean y) {
         if (x) {

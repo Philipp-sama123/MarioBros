@@ -9,12 +9,16 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 import com.philipp.stampfer.mygdx.game.MarioBros;
 import com.philipp.stampfer.mygdx.game.Screens.PlayScreen;
-import com.philipp.stampfer.mygdx.game.Sprites.Brick;
-import com.philipp.stampfer.mygdx.game.Sprites.Coin;
+import com.philipp.stampfer.mygdx.game.Sprites.TileObjects.Brick;
+import com.philipp.stampfer.mygdx.game.Sprites.TileObjects.Coin;
+import com.philipp.stampfer.mygdx.game.Sprites.Enemies.Goomba;
 
 public class WorldCreator {
+    private Array<Goomba> goombas;
+
     public WorldCreator(PlayScreen screen) {
         World world = screen.getWorld();
         TiledMap map = screen.getMap();
@@ -82,5 +86,18 @@ public class WorldCreator {
 
             new Coin(screen, rectangle);
         }
+
+        //create all goombas
+        goombas = new Array<Goomba>();
+        for (MapObject object : map.getLayers().get(6).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rectangle = ((RectangleMapObject) object).getRectangle();
+            goombas.add(new Goomba(screen, rectangle.getX() / MarioBros.PIXELS_PER_METER, rectangle.getY() / MarioBros.PIXELS_PER_METER));
+        }
+
     }
+
+    public Array<Goomba> getGoombas() {
+        return goombas;
+    }
+
 }

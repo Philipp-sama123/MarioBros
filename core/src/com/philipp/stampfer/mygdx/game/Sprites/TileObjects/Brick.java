@@ -1,14 +1,12 @@
-package com.philipp.stampfer.mygdx.game.Sprites;
+package com.philipp.stampfer.mygdx.game.Sprites.TileObjects;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.physics.box2d.World;
 import com.philipp.stampfer.mygdx.game.MarioBros;
 import com.philipp.stampfer.mygdx.game.Scenes.Hud;
 import com.philipp.stampfer.mygdx.game.Screens.PlayScreen;
+import com.philipp.stampfer.mygdx.game.Sprites.TileObjects.InteractiveTileObject;
 
 
 public class Brick extends InteractiveTileObject {
