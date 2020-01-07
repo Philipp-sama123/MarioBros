@@ -6,30 +6,28 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.philipp.stampfer.mygdx.game.MarioBros;
 import com.philipp.stampfer.mygdx.game.Scenes.Hud;
-import com.philipp.stampfer.mygdx.game.Sprites.Goomba;
+import com.philipp.stampfer.mygdx.game.Sprites.Enemies.Enemy;
+import com.philipp.stampfer.mygdx.game.Sprites.Items.Item;
+import com.philipp.stampfer.mygdx.game.Sprites.Items.ItemDefinition;
+import com.philipp.stampfer.mygdx.game.Sprites.Items.Mushroom;
 import com.philipp.stampfer.mygdx.game.Sprites.Mario;
 import com.philipp.stampfer.mygdx.game.Tools.WorldContactListener;
 import com.philipp.stampfer.mygdx.game.Tools.WorldCreator;
+
+import java.util.PriorityQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class PlayScreen implements Screen {
 
@@ -37,26 +35,30 @@ public class PlayScreen implements Screen {
 
     private TextureAtlas textureAtlas;
 
+    // basic playscreen vars
     private OrthographicCamera gameCamera;
     private Viewport gameViewport;
     private Hud hud;
-
-    // Box 2D Variables
-    private World world;
-    private Box2DDebugRenderer box2DDebugRenderer;
-
-    //sprites
-    private Mario player;
-    private Goomba goomba;
 
     private TmxMapLoader mapLoader;
     private TiledMap map;
     private OrthogonalTiledMapRenderer renderer;
 
+    // Box 2D Variables
+    private World world;
+    private Box2DDebugRenderer box2DDebugRenderer;
+    private WorldCreator worldCreator;
+
+    //sprites
+    private Mario player;
+
     private Music music;
 
+    private Array<Item> items;
+    private LinkedBlockingDeque<ItemDefinition> itemsToSpawn;
+
     public PlayScreen(MarioBros marioBrosGame) {
-        textureAtlas = new TextureAtlas("Mario_and_Enemies.pack");
+        textureAtlas = new TextureAtlas("Mario_and_Enemies.atlas");
 
         this.marioBrosGame = marioBrosGame;
 
@@ -83,17 +85,20 @@ public class PlayScreen implements Screen {
         world = new World(new Vector2(0, -10), true);
         box2DDebugRenderer = new Box2DDebugRenderer();
 
-        new WorldCreator(this);
+        worldCreator = new WorldCreator(this);
 
         // creates Mario in the World
         player = new Mario(this);
 
         world.setContactListener(new WorldContactListener());
+
         music = MarioBros.assetManager.get("audio/music/mario_music.ogg", Music.class);
         music.setLooping(true);
+
         music.play();
 
-        goomba = new Goomba(this, 5.64f, .16f);
+        items = new Array<Item>();
+        itemsToSpawn = new LinkedBlockingDeque<ItemDefinition>();
     }
 
     public TextureAtlas getTextureAtlas() {
@@ -116,18 +121,30 @@ public class PlayScreen implements Screen {
     public void update(float dt) {
         // handle user input first
         handleInput(dt);
+        handleSpawningItems();
 
         // takes 1 step in the physics simulation -- 60 times per second
         world.step(1 / 60f, 6, 2);
 
         player.update(dt);
-        goomba.update(dt);
+
         hud.update(dt);
+        for (Enemy enemy : worldCreator.getGoombas()) {
+            enemy.update(dt);
+            if (enemy.getX() < player.getX() + MarioBros.ENEMY_SPAWN_DISTANCE / MarioBros.PIXELS_PER_METER) {
+                enemy.body2d.setActive(true);
+            }
+        }
+
+        for (Item item : items) {
+            item.update(dt);
+        }
         // attach gameCamera to players x coordinate
         gameCamera.position.x = player.body2d.getPosition().x;
 
         gameCamera.update();
 
+        // just draw what is seen
         renderer.setView(gameCamera); // render what game cam can see
     }
 
@@ -159,15 +176,31 @@ public class PlayScreen implements Screen {
 
         marioBrosGame.batch.setProjectionMatrix(gameCamera.combined);
         marioBrosGame.batch.begin();
-
         player.draw(marioBrosGame.batch);
-        goomba.draw(marioBrosGame.batch);
 
+        for (Enemy enemy : worldCreator.getGoombas()) {
+            enemy.draw(marioBrosGame.batch);
+        }
+        for (Item item : items) {
+            item.draw(marioBrosGame.batch);
+        }
         marioBrosGame.batch.end();
 
         marioBrosGame.batch.setProjectionMatrix(hud.stage.getCamera().combined);
         hud.stage.draw();
+    }
 
+    public void spawnItem(ItemDefinition itemDefinition) {
+        itemsToSpawn.add(itemDefinition);
+    }
+
+    public void handleSpawningItems() {
+        if (!itemsToSpawn.isEmpty()) {
+            ItemDefinition itemDef = itemsToSpawn.poll();
+            if (itemDef.type == Mushroom.class) {
+                items.add(new Mushroom(this, itemDef.position.x, itemDef.position.y));
+            }
+        }
     }
 
     @Override

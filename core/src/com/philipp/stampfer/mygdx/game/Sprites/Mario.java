@@ -129,6 +129,7 @@ public class Mario extends Sprite {
                 MarioBros.BRICK_BIT |
                 MarioBros.ENEMY_BIT |
                 MarioBros.OBJECT_BIT |
+                MarioBros.ITEM_BIT |
                 MarioBros.ENEMY_HEAD_BIT;
 
         fixtureDef.shape = circleShape;

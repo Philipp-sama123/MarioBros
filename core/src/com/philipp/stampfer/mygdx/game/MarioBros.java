@@ -16,6 +16,7 @@ public class MarioBros extends Game {
     public static final int VISUAL_HEIGHT = 200;
     public static final float PIXELS_PER_METER = 100f;
     public static final int MAXIMUM_SPEED = 2;
+    public static final int ENEMY_SPAWN_DISTANCE = 224;
 
     public static final short GROUND_BIT = 1;
     public static final short MARIO_BIT = 2;
@@ -25,6 +26,7 @@ public class MarioBros extends Game {
     public static final short OBJECT_BIT = 32;
     public static final short ENEMY_BIT = 64;
     public static final short ENEMY_HEAD_BIT = 128;
+    public static final short ITEM_BIT = 256;
 
     public SpriteBatch batch;
 
